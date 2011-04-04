@@ -5,9 +5,9 @@ class HoldEmIdentifier extends HandIdentifier
 
     public function identify(array $AllCards)
     {
-        $FourOfAKind = $this->_checkForFourOfAKind($AllCards);
-        if ($FourOfAKind instanceof Hand) {
-            return $FourOfAKind;
+        $FourOfAKindCards = $this->_findAnyOfAKindCards(4, $AllCards);
+        if ($FourOfAKindCards) {
+            return $this->_buildOfAKindHand("FourOfAKind", $FourOfAKindCards, $AllCards);
         }
 
         $FullHouse = $this->_checkForFullHouse($AllCards);
@@ -15,14 +15,14 @@ class HoldEmIdentifier extends HandIdentifier
             return $FullHouse;
         }
 
-        $ThreeOfAKind = $this->_checkForThreeOfAKind($AllCards);
-        if ($ThreeOfAKind instanceof Hand) {
-            return $ThreeOfAKind;
+        $ThreeOfAKindCards = $this->_findAnyOfAKindCards(3, $AllCards);
+        if ($ThreeOfAKindCards) {
+            return $this->_buildOfAKindHand("ThreeOfAKind", $ThreeOfAKindCards, $AllCards);
         }
 
-        $TwoOfAKind = $this->_checkForTwoOfAKind($AllCards);
-        if ($TwoOfAKind instanceof Hand) {
-            return $TwoOfAKind;
+        $TwoOfAKindCards = $this->_findAnyOfAKindCards(2, $AllCards);
+        if ($TwoOfAKindCards) {
+            return $this->_buildOfAKindHand("TwoOfAKind", $TwoOfAKindCards, $AllCards);
         }
 
         return new HighCard(array_slice(CardRanker::getSortedCards($AllCards), 0, 5));
@@ -52,31 +52,6 @@ class HoldEmIdentifier extends HandIdentifier
         return $CardsGroupedByValues;
     }
 
-    private function _checkForFourOfAKind($AllCards)
-    {
-        $CardsGroupedByValues = $this->_groupCardsByFaceValue($AllCards);
-
-        foreach ($CardsGroupedByValues as $faceValue => $CardsOfValue) {
-            if (count($CardsOfValue) == 4) {
-                $CardsNotOfValue = $this->_getSortedCardsNotOfFaceValue($faceValue, $CardsGroupedByValues);
-                return new FourOfAKind(array_merge($CardsOfValue, array($CardsNotOfValue[0])));
-            }
-        }
-    }
-
-    private function _checkForThreeOfAKind($AllCards)
-    {
-        $CardsGroupedByValues = $this->_groupCardsByFaceValue($AllCards);
-        foreach ($CardsGroupedByValues as $faceValue => $CardsOfValue) {
-            if (count($CardsOfValue) == 3) {
-                $CardsNotOfValue = $this->_getSortedCardsNotOfFaceValue($faceValue, $CardsGroupedByValues);
-                return new ThreeOfAKind(
-                    array_merge($CardsOfValue, array($CardsNotOfValue[0], $CardsNotOfValue[1]))
-                );
-            }
-        }
-    }
-
     private function _checkForFullHouse($AllCards)
     {
         $CardsGroupedByValues = $this->_groupCardsByFaceValue($AllCards);
@@ -91,19 +66,30 @@ class HoldEmIdentifier extends HandIdentifier
         }
     }
 
-    private function _checkForTwoOfAKind($AllCards)
+    private function _findAnyOfAKindCards($numberOfCards, $AllCards)
     {
         $CardsGroupedByValues = $this->_groupCardsByFaceValue($AllCards);
-        foreach ($CardsGroupedByValues as $faceValue => $CardsOfValue) {
-            if (count($CardsOfValue) == 2) {
-                $CardsNotOfValue = $this->_getSortedCardsNotOfFaceValue($faceValue, $CardsGroupedByValues);
-                return new TwoOfAKind(
-                    array_merge(
-                        $CardsOfValue,
-                        array($CardsNotOfValue[0], $CardsNotOfValue[1], $CardsNotOfValue[2])
-                    )
-                );
+        foreach ($CardsGroupedByValues as $CardsOfValue) {
+            if (count($CardsOfValue) == $numberOfCards) {
+                return $CardsOfValue;
             }
         }
+        return array();
+    }
+
+    /**
+     * @param string $HandType
+     * @param Card[] $OfAKindCards
+     * @param Card[] $AllCards
+     * @return 
+     */
+    private function _buildOfAKindHand($HandType, array $OfAKindCards, array $AllCards)
+    {
+        $CardsGroupedByValues = $this->_groupCardsByFaceValue($AllCards);
+        $Card = $OfAKindCards[0];
+        $CardsNotOfValue = $this->_getSortedCardsNotOfFaceValue($Card->getFaceValue(), $CardsGroupedByValues);
+        $numberOfNeededKickers = 5-count($OfAKindCards);
+        $Kickers = array_slice($CardsNotOfValue, 0, $numberOfNeededKickers);
+        return new $HandType(array_merge($OfAKindCards, $Kickers));
     }
 }

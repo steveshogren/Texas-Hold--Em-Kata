@@ -1,6 +1,7 @@
 <?php
  
-class Card {
+class Card
+{
     const JACK = 11;
     const QUEEN = 12;
     const KING = 13;

@@ -43,6 +43,10 @@ class CardBuilder
         return $Card;
     }
 
+    /**
+     * @param  $faceValue
+     * @return int
+     */
     private function _convertValueFromLetterToNumber($faceValue)
     {
         switch ($faceValue) {

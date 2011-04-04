@@ -1,6 +1,6 @@
 <?php
-
-class Hand {
+class Hand
+{
     /** @var Card[] */
     private $_Cards;
 
@@ -22,6 +22,8 @@ class Hand {
     }
 
     /**
+     * Prints out all the Cards in the Hand, and then the Hand's name
+     * e.g. "A-S  J-C  7-H  6-C  5-D  (High Card)"
      * @return string
      */
     public function __toString()
@@ -32,14 +34,15 @@ class Hand {
             $handString .= $Card . '  ';
         }
 
-        $handString .= "({$this->getHandType()})";
+        $handString .= "({$this->getReadableName()})";
         return $handString;
     }
 
     /**
+     * e.g. "Two Of A Kind"
      * @return string
      */
-    protected function getHandType()
+    protected function getReadableName()
     {
         $handTypeString = '';
         $myClass = get_class($this);
